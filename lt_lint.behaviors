@@ -1,0 +1,3 @@
+[
+ [:app :lt.objs.plugins/load-js "lt-lint_compiled.js"]
+ ]

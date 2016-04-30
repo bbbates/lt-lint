@@ -1,0 +1,6 @@
+{:name "lt-lint"
+ :version "0.0.1"
+ :author "Brendan Bates"
+ :source "https://github.com/bbbates/lt-lint"
+ :desc "Enable editor linter addons for LightTable, using CodeMirror's lint addon"
+ :behaviors "lt_lint.behaviors"}
