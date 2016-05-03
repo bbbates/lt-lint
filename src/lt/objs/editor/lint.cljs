@@ -38,6 +38,12 @@
         (nil? res) (console/error (str "No response received from linter " (:linter-name @obj)))
         (:error res) (console/error (str "Error received from linter " (:linter-name @obj)) res)))
 
+(defn- ->cm-lint-msg
+  [{:keys [from to] :as msg}]
+  (assoc msg
+    :from (js/CodeMirror.Pos (first from) (last from))
+    :to (js/CodeMirror.Pos (first to) (last to))))
+
 (defn- validate-with-all-linters
   "Raise ::validate trigger on all given linter objects asynchronously, then pass all the results
   at once to the codemirror linter callback function"
@@ -53,7 +59,7 @@
                      results+res (if res (conj results res) results)]
                  (if (seq r)
                    (recur r results+res)
-                   (callback (clj->js (apply concat results+res)))))))))
+                   (callback (clj->js (map ->cm-lint-msg (apply concat results+res))))))))))
 
 (defn- add-linter
   [linters linter-obj args]
@@ -96,9 +102,8 @@
   (behavior ::dummy-validate
             :triggers #{::validate}
             :reaction (fn [_ editor-text callback]
-                        (println "LINTING!" editor-text)
                         (callback [{:message "Test error"
                                     :severity "Warning"
-                                    :from (js/CodeMirror.Pos 1 0)
-                                    :to (js/CodeMirror.Pos 6 20)}])))
+                                    :from [1 0]
+                                    :to [2 20]}])))
 )
