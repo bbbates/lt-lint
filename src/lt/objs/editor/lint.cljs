@@ -25,12 +25,6 @@
 ;; (behavior :lt.plugins.some-linter/validate
 ;;            :triggers #{:lt.objs.editor.lint/validate}
 ;;            :reaction (fn [this editor-text results-callback] (results-callback (eval-source-text editor-text))))
-;; The linters should return a seq of maps that match:
-;;
-;; TODO: do we need this?
-;; (object/object* ::linter
-;;                 :tags [:linter]
-;;                 :triggers [::validate])
 
 (defn- verify-linter-result
   [obj res]
@@ -63,10 +57,10 @@
 
 (defn- add-linter
   [linters linter-obj args]
-  (if-not (seq (filter #(= (:lt.object/type (deref %)) linter-obj) linters))
-    (let [obj (apply object/create linter-obj args)]
-      (conj linters obj))
-    linters))
+  (let [obj (apply object/create linter-obj args)]
+    (->
+      (remove #(= (:lt.object/type (deref %)) linter-obj) linters)
+      (conj obj))))
 
 (defn- prepare-editor-for-linter
   [ed [linter-obj & args]]
@@ -91,7 +85,9 @@
 ;; Notes ---------
 (comment
   (:ed @(pool/last-active))
+
 (object/merge! linters {:by-tag {}})
+
   (prepare-editor-for-linter (pool/last-active) [::dummy-linter])
 
   (object/object* ::dummy-linter
