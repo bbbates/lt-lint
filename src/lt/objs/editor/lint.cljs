@@ -28,9 +28,9 @@
 
 (defn- verify-linter-result
   [obj res]
-  (cond (vector? res) res
-        (nil? res) (console/error (str "No response received from linter " (:linter-name @obj)))
-        (:error res) (console/error (str "Error received from linter " (:linter-name @obj)) res)))
+  (cond (nil? res) (console/error (str "No response received from linter " (:linter-name @obj)))
+        (and (map? res) (:error res)) (console/error (str "Error received from linter " (:linter-name @obj)) res)
+        (and (coll? res) (not (map? res))) res))
 
 (defn- ->cm-lint-msg
   [{:keys [from to] :as msg}]
@@ -70,13 +70,14 @@
         validator-fn (apply validate-with-all-linters (get-in new-linters [:by-tag ed-tag]))]
     (editor/set-options ed
                         {:lint #js {:async true :getAnnotations validator-fn}
-                         :fixedGutter false})))
+                         :fixedGutter false})
+    (:ed @ed)))
 
 ;; Linter plugin authors: register your linter using this behavior
 ;; Example:
 ;; [:editor.clojure :lt.objs.editor.lint/register-linter [:lt.plugins.some-linter/linter-object :arg1 val1 :arg2 val2]]
 (behavior ::register-linter
-          :triggers #{}
+          :triggers #{:object.instant}
           :type :user
           :desc "Editor: Register linter"
           :params [{:label "linter" :example "[:lt.plugins.some-linter/linter-object :opt-arg1 val1 :opt-arg2 val2 ...]"}]
@@ -84,17 +85,22 @@
 
 ;; Notes ---------
 (comment
+  ;; current editor
   (:ed @(pool/last-active))
 
+  ;; remove all linters
 (object/merge! linters {:by-tag {}})
 
+  ;; add linter to this editor
   (prepare-editor-for-linter (pool/last-active) [::dummy-linter])
 
+  ;; dummy linter
   (object/object* ::dummy-linter
                   :triggers [::validate]
                   :behaviors [::dummy-validate]
                   :linter-name "Dummy linter")
 
+  ;; dummy linter
   (behavior ::dummy-validate
             :triggers #{::validate}
             :reaction (fn [_ editor-text callback]
