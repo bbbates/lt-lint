@@ -1,3 +1,4 @@
 [
  [:app :lt.objs.plugins/load-js ["codemirror/lint.js" "lt-lint_compiled.js"]]
+ [:app :lt.objs.plugins/load-css "resources/lint.css"]
  ]

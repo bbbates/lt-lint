@@ -1,2 +1,3 @@
-# Linters for LightTable Plugin
+# Linters for LightTable
+
 

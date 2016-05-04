@@ -1,0 +1,20 @@
+.CodeMirror-gutter-wrapper .CodeMirror-lint-marker-Error {
+  background-color: #D3696C;
+}
+
+.CodeMirror-gutter-wrapper .CodeMirror-lint-marker-Warning {
+  background-color: #FFFF31;
+}
+
+.CodeMirror-lint-mark-error, .CodeMirror-lint-mark-warning {
+  border-bottom-width: 2px;
+  border-bottom-style: dotted;
+}
+
+.CodeMirror-lint-mark-error {
+  border-bottom-color: #D3696C;
+}
+
+.CodeMirror-lint-mark-warning {
+  border-bottom-color: #FFFF31;
+}
