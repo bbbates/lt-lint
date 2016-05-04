@@ -1,3 +1,2 @@
 # Linters for LightTable
 
-

@@ -1,3 +1,9 @@
+.CodeMirror-gutter-wrapper .CodeMirror-lint-marker-Error, .CodeMirror-gutter-wrapper .CodeMirror-lint-marker-Warning {
+  height: 10px;
+  margin-top: 5px;
+  /* TODO: these should be pulled from settings */
+}
+
 .CodeMirror-gutter-wrapper .CodeMirror-lint-marker-Error {
   background-color: #D3696C;
 }
