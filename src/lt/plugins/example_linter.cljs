@@ -29,5 +29,5 @@
 
 (behavior ::lint-words-in-editor
           :triggers #{:lt.objs.editor.lint/validate}
-          :reaction (fn [obj editor-text callback]
+          :reaction (fn [obj editor-text callback _]
                       (callback (lint-words editor-text (first (:args @obj))))))

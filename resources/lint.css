@@ -24,3 +24,7 @@
 .CodeMirror-lint-mark-warning {
   border-bottom-color: #FFFF31;
 }
+
+.CodeMirror-lint-tooltip {
+  display: none; /* Hide these tooltips for now */
+}

@@ -65,7 +65,7 @@
                                 (let [ch (async/timeout (or (:timeout @obj) default-timeout))
                                       callback-fn (fn [results] (go (async/>! ch results)))]
                                   [ch callback-fn obj])) linter-objs)]
-      (doseq [[_ f obj] validate-chans] (object/raise obj ::validate editor-text f))
+      (doseq [[_ f obj] validate-chans] (object/raise obj ::validate editor-text f ed))
       (go-loop [[[ch _ obj] & r] validate-chans results []]
                (let [res (verify-linter-result obj (async/<! ch))
                      results+res (if res (conj results res) results)]
@@ -99,7 +99,7 @@
           :type :user
           :desc "Editor: Register linter"
           :params [{:label "linter" :example "[:lt.plugins.some-linter/linter-object :opt-arg1 val1 :opt-arg2 val2 ...]"}]
-          :reaction (fn [this linter] (prepare-editor-for-linter this linter)))
+          :reaction prepare-editor-for-linter)
 
 ;; Notes ---------
 (comment
@@ -127,9 +127,6 @@
                                     :from [1 0]
                                     :to [2 20]}])))
 
-  ;; when the cursor moves
-  (let [ed (pool/last-active)]
-    (editor/on ed :cursorActivity (fn [& args]
-                                    (.log js/console "!!!" (editor/find-marks ed (editor/->cursor ed))))))
-
 )
+
+;; TODO: UGH! clojure linter is so slow - performance tune !!
