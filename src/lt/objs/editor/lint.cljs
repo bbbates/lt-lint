@@ -1,5 +1,6 @@
 (ns lt.objs.editor.lint
   (:require [lt.object :as object]
+            [lt.objs.command :as cmd]
             [lt.objs.console :as console]
             [lt.objs.editor :as editor]
             [lt.objs.editor.pool :as pool]
@@ -80,15 +81,24 @@
       (remove #(= (:lt.object/type (deref %)) linter-obj) linters)
       (conj obj))))
 
+(defn- set-cm-lint-settings!
+  [ed]
+  (let [{:keys [lint? fn auto? change-timeout] :or {auto? true change-timeout 500}} (-> @ed :info ::settings)]
+    (editor/set-options ed
+                        {:lint (when lint? #js {:async true
+                                                :getAnnotations fn
+                                                :lintOnChange auto?
+                                                :delay change-timeout})
+                         :fixedGutter false})))
+
 (defn- prepare-editor-for-linter
   [ed [linter-obj & args]]
   (editor/add-gutter ed "CodeMirror-lint-markers" 10)
   (let [ed-tag (first (get-in @ed [:info :tags]))
         new-linters (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj args))
         validator-fn (apply validate-with-all-linters ed (get-in new-linters [:by-tag ed-tag]))]
-    (editor/set-options ed
-                        {:lint #js {:async true :getAnnotations validator-fn}
-                         :fixedGutter false})
+    (object/merge! ed (update-in @ed [:info ::settings] merge {:lint? true :fn validator-fn}))
+    (set-cm-lint-settings! ed)
     (:ed @ed)))
 
 ;; Linter plugin authors: register your linter using this behavior
@@ -100,6 +110,23 @@
           :desc "Editor: Register linter"
           :params [{:label "linter" :example "[:lt.plugins.some-linter/linter-object :opt-arg1 val1 :opt-arg2 val2 ...]"}]
           :reaction prepare-editor-for-linter)
+
+;; Linters can be set to be run manually only using this behavior
+(behavior ::auto-linting-properties
+          :triggers #{:object.instant}
+          :type :user
+          :desc "Editor: Auto linting settings"
+          :params [{:label "enabled?" :type :boolean} {:label "change timeout" :type :number}]
+          :reaction (fn [ed enabled? change-timeout]
+                      (object/merge! ed (update-in @ed [:info ::settings] merge {:auto? enabled? :change-timeout change-timeout}))
+                      (set-cm-lint-settings! ed)))
+
+(cmd/command {:command ::run-linters!
+              :desc "Editor: run linters for current editor"
+              :exec (fn []
+                      (let [ed (pool/last-active)]
+                        (.performLint (editor/->cm-ed ed))))})
+
 
 ;; Notes ---------
 (comment
