@@ -2,11 +2,14 @@
 
 Base plugin for enabling editor linter addons for LightTable.
 
-Does not actually provide any (useful) linters; is a base dependency for linters, and provides a consistent
+Does not actually provide any (useful) linters; it is a base dependency for linter plugins, and provides a consistent
 set of UI components across all linters and editors.
 
 ## Linter UI components
-TODO
 
-## Instructions for plugin authors
-TODO
+
+## For users
+
+## For plugin authors
+
+

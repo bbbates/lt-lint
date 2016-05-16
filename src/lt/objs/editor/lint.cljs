@@ -5,6 +5,7 @@
             [lt.objs.editor :as editor]
             [lt.objs.editor.pool :as pool]
             [lt.objs.notifos :as notifos]
+            [lt.plugins.doc :as doc]
             [cljs.core.async :as async])
   (:require-macros [lt.macros :refer [behavior background]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -43,17 +44,23 @@
   [tm]
   (re-find #"^CodeMirror-lint-mark-" (.-className tm)))
 
-;;TODO: when activated, and cursor is over mark, then show lint message bar at bottom of editor, ala find-bar
+(defn lint-messages-for-cursor
+  [ed]
+  (let [text-marks (editor/find-marks ed (editor/->cursor ed))]
+    (seq (filter is-lint-mark? text-marks))))
+
+(defn text-mark->lint-result
+  [text-mark]
+  (js->clj (.-__annotation text-mark) :keywordize-keys true))
 
 (defn- on-cursor-activity
   [ed]
-  (let [text-marks (editor/find-marks ed (editor/->cursor ed))]
-    (if-let [lint-marks (seq (filter is-lint-mark? text-marks))]
-      (if (< 1 (count lint-marks))
-        (notifos/set-msg! "Multiple lint messages found.")
-        (let [annotation (js->clj (-> lint-marks first .-__annotation) :keywordize-keys true)]
-          (notifos/set-msg! (:message annotation) {:class (:severity annotation)})))
-      (notifos/set-msg! ""))))
+  (if-let [lint-marks (lint-messages-for-cursor ed)]
+    (if (< 1 (count lint-marks))
+      (notifos/set-msg! "Multiple lint messages found.")
+      (let [annotation (-> lint-marks first text-mark->lint-result)]
+        (notifos/set-msg! (:message annotation) {:class (:severity annotation)})))
+    (notifos/set-msg! "")))
 
 (defn- validate-with-all-linters
   "Raise ::validate trigger on all given linter objects asynchronously, then pass all the results
@@ -64,8 +71,11 @@
     (editor/on ed :cursorActivity (partial on-cursor-activity ed))
     (let [validate-chans (map (fn [obj]
                                 (let [ch (async/timeout (or (:timeout @obj) default-timeout))
-                                      callback-fn (fn [results] (go (async/>! ch results)))]
-                                  [ch callback-fn obj])) linter-objs)]
+                                      callback-fn (fn [results]
+                                                    (go
+                                                      (async/>! ch (map #(assoc % :from-linter obj) results))))]
+                                  [ch callback-fn obj]))
+                              linter-objs)]
       (doseq [[_ f obj] validate-chans] (object/raise obj ::validate editor-text f ed))
       (go-loop [[[ch _ obj] & r] validate-chans results []]
                (let [res (verify-linter-result obj (async/<! ch))
@@ -122,10 +132,40 @@
                       (set-cm-lint-settings! ed)))
 
 (cmd/command {:command ::run-linters!
-              :desc "Editor: run linters for current editor"
+              :desc "Linter: run linters for current editor"
               :exec (fn []
-                      (let [ed (pool/last-active)]
+                      (when-let [ed (pool/last-active)]
                         (.performLint (editor/->cm-ed ed))))})
+
+(defn- doc-message-text
+  [{:keys [message from-linter]}]
+  (str (:linter-name @from-linter) ":\n\n" message))
+
+(defn- inline-doc-for-lint-messages
+  [msgs]
+  (let [msgs (map text-mark->lint-result msgs)]
+    {:loc {:line (.-line (:to (first msgs)))}
+     :name "Lint results"
+     :doc (clojure.string/join "\n\n" (map doc-message-text msgs))}))
+
+(defn show-lint-message
+  [ed lint-messages]
+  (object/raise ed :editor.doc.show! (inline-doc-for-lint-messages lint-messages)))
+
+(defn toggle-lint-message
+  [ed]
+  (if-let [lint-messages (lint-messages-for-cursor ed)]
+    (let [loc (editor/->cursor ed)]
+      (if-let [cur (doc/doc-on-line? ed (:line loc))]
+        (doc/remove! ed cur)
+        (show-lint-message ed lint-messages)))
+    (notifos/set-msg! "No lint message found at cursor..." {:class "error"})))
+
+(cmd/command {:command ::toggle-lint-message
+              :desc "Linter: toggle lint message"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (toggle-lint-message ed)))})
 
 
 ;; Notes ---------
