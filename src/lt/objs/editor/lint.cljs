@@ -85,8 +85,8 @@
                    (callback (clj->js (map ->cm-lint-msg (apply concat results+res))))))))))
 
 (defn- add-linter
-  [linters linter-obj args]
-  (let [obj (apply object/create linter-obj args)]
+  [linters linter-obj ed args]
+  (let [obj (apply object/create linter-obj ed args)]
     (->
       (remove #(= (:lt.object/type (deref %)) linter-obj) linters)
       (conj obj))))
@@ -105,7 +105,7 @@
   [ed [linter-obj & args]]
   (editor/add-gutter ed "CodeMirror-lint-markers" 10)
   (let [ed-tag (first (get-in @ed [:info :tags]))
-        new-linters (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj args))
+        new-linters (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj ed args))
         validator-fn (apply validate-with-all-linters ed (get-in new-linters [:by-tag ed-tag]))]
     (object/merge! ed (update-in @ed [:info ::settings] merge {:lint? true :fn validator-fn}))
     (set-cm-lint-settings! ed)

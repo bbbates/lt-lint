@@ -11,7 +11,8 @@
 (object/object* ::example-word-linter
                 :triggers [:lt.objs.editor.lint/validate]
                 :behaviors [::lint-words-in-editor]
-                :linter-name "Example word linter")
+                :linter-name "Example word linter"
+                :init (fn [this ed words] ed (object/merge! this {:words words})))
 
 (defn- lint-words
   [editor-text words]
@@ -30,4 +31,4 @@
 (behavior ::lint-words-in-editor
           :triggers #{:lt.objs.editor.lint/validate}
           :reaction (fn [obj editor-text callback _]
-                      (callback (lint-words editor-text (first (:args @obj))))))
+                      (callback (lint-words editor-text (:words @obj)))))
