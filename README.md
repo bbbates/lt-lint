@@ -92,7 +92,8 @@ The example\_linter.cljs file in this project contains a simple little example o
 
 ## Linters using this plugin
 
-TODO
+- [lt-clojure-linter](https://github.com/bbbates/lt-clojure-linter)
+- [lt-jshint](https://github.com/bbbates/lt-jshint)
 
 ## License
 
