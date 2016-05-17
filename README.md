@@ -38,7 +38,7 @@ Writing linter plugins was designed to be fairly easy.
 
 To contribute a linter for an editor, you need 3 things:
 
-1. A linter object that has contains the following keys:
+1) A linter object that has contains the following keys:
 
 ```:linter-name``` -> a name of the linter to be run
 ```:timeout``` -> (optional) how long the linter plugin should wait for a response from your linter
@@ -54,7 +54,7 @@ For example:
                 :init (fn [this ed words] (object/merge! this {:words words})))
 ```
 
-2. A behaviour to handle the ```:lt.objs.editor.lint/validate``` event.
+2) A behaviour to handle the ```:lt.plugins.lt-lint/validate``` event.
 The :reaction function must be a function with the following signature:
 
 ``` [this editor-text f ed] ```
@@ -75,14 +75,14 @@ Results of the linter are a seq of linter messages - maps that should match the 
 For example:
 ```
 (behavior ::lint-words-in-editor
-          :triggers #{:lt.objs.editor.lint/validate}
+          :triggers #{:lt.plugins.lt-lint/validate}
           :reaction (fn [obj editor-text callback _]
                       (callback (lint-words editor-text (:words @obj)))))
 ```
 
 The example\_linter.cljs file in this project contains a simple little example of a linter.
 
-3. The linter needs to be registered via the ```:lt.plugins.lt-lint/register-linter``` behaviour
+3) The linter needs to be registered via the ```:lt.plugins.lt-lint/register-linter``` behaviour
 
 ```
   [:editor.lang :lt.plugins.lt-lint/register-linter [:example-word-linter #{"foo" "bar" "text"}]] ;; register the linter using the object defined in 1. Args after the object keyword are passed to the init fn of the object.

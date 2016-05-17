@@ -3,7 +3,7 @@
     The Linter in this namespace is not automatically added to LT; you will need to add it manually to your user behaviors
     file, using:
 
-    [:editor.markdown :lt.objs.editor.lint/register-linter [:lt.plugins.example-linter/example-word-linter #{\"maybe\" \"open\" \"text\"}]]"}
+    [:editor.markdown :lt.plugins.lt-lint/register-linter [:lt.plugins.example-linter/example-word-linter #{\"maybe\" \"open\" \"text\"}]]"}
   lt.plugins.example-linter
   (:require [lt.object :as object])
   (:require-macros [lt.macros :refer [behavior]]))

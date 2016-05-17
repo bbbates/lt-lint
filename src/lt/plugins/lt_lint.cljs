@@ -21,12 +21,12 @@
 ;; Linter plugin authors: your linter should provide a ::linter object that defines a behavior
 ;; that reacts to the ::validate event
 ;; e.g.
-;; (object/create :lt.objs.editor.lint/linter
+;; (object/create :lt.plugins.lt-lint/linter
 ;;                :behaviours [:lt.plugins.some-linter/validate]
 ;;                :linter-name "Optional linter name")
 ;; ...
 ;; (behavior :lt.plugins.some-linter/validate
-;;            :triggers #{:lt.objs.editor.lint/validate}
+;;            :triggers #{:lt.plugins.lt-lint/validate}
 ;;            :reaction (fn [this editor-text results-callback] (results-callback (eval-source-text editor-text))))
 
 (defn- verify-linter-result
@@ -114,7 +114,7 @@
 
 ;; Linter plugin authors: register your linter using this behavior
 ;; Example:
-;; [:editor.clojure :lt.objs.editor.lint/register-linter [:lt.plugins.some-linter/linter-object :arg1 val1 :arg2 val2]]
+;; [:editor.clojure :lt.plugins.lt-lint/register-linter [:lt.plugins.some-linter/linter-object :arg1 val1 :arg2 val2]]
 (behavior ::register-linter
           :triggers #{:object.instant}
           :type :user
