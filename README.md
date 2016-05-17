@@ -72,6 +72,14 @@ Results of the linter are a seq of linter messages - maps that should match the 
  }
 ```
 
+For example:
+```
+(behavior ::lint-words-in-editor
+          :triggers #{:lt.objs.editor.lint/validate}
+          :reaction (fn [obj editor-text callback _]
+                      (callback (lint-words editor-text (:words @obj)))))
+```
+
 The example\_linter.cljs file in this project contains a simple little example of a linter.
 
 ## Linters using this plugin
