@@ -48,7 +48,7 @@ For example:
 ```
 (require '[lt.object :as object])
 
-(object/object* ::example-word-linter
+(object/object* :example-word-linter
                 :behaviors [::lint-words-in-editor]
                 :linter-name "Example word linter"
                 :init (fn [this ed words] (object/merge! this {:words words})))
@@ -81,6 +81,14 @@ For example:
 ```
 
 The example\_linter.cljs file in this project contains a simple little example of a linter.
+
+3. The linter needs to be registered via the ```:lt.plugins.lt-lint/register-linter``` behaviour
+
+```
+  [:editor.lang :lt.plugins.lt-lint/register-linter [:example-word-linter #{"foo" "bar" "text"}]] ;; register the linter using the object defined in 1. Args after the object keyword are passed to the init fn of the object.
+  [:editor.lang :lt.object/add-tag :docable] ;; you may need to ensure the editor lang your linting can display underline docs - this behaviour will ensure that
+```
+
 
 ## Linters using this plugin
 

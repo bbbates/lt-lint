@@ -28,6 +28,6 @@
                                (clojure.string/split editor-text #"\n")))))
 
 (behavior ::lint-words-in-editor
-          :triggers #{:lt.objs.editor.lint/validate}
+          :triggers #{:lt.plugins.lt-lint/validate}
           :reaction (fn [obj editor-text callback _]
                       (callback (lint-words editor-text (:words @obj)))))
