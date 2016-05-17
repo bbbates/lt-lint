@@ -9,10 +9,9 @@
   (:require-macros [lt.macros :refer [behavior]]))
 
 (object/object* ::example-word-linter
-                :triggers [:lt.objs.editor.lint/validate]
                 :behaviors [::lint-words-in-editor]
                 :linter-name "Example word linter"
-                :init (fn [this ed words] ed (object/merge! this {:words words})))
+                :init (fn [this ed words] (object/merge! this {:words words})))
 
 (defn- lint-words
   [editor-text words]
