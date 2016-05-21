@@ -13,7 +13,8 @@
 
 (object/object* ::linters
                 :tags [:linters]
-                :by-tag {})
+                :by-tag {}
+                :behaviors [::lint-handler])
 
 (def ^:private linters (object/create ::linters))
 (def ^:private default-timeout 5000)
@@ -92,12 +93,25 @@
       (remove #(= (:lt.object/type (deref %)) linter-obj) linters)
       (conj obj))))
 
+(defn- start-lint!
+  [linters ed editor-text callback options]
+  (let [ed-tag (first (get-in @ed [:info :tags]))]
+    ((apply validate-with-all-linters ed (get-in @linters [:by-tag ed-tag])) editor-text callback options)))
+
+(behavior ::lint-handler
+          :triggers #{::start-lint!}
+          :reaction start-lint!)
+
+(defn- editor-linting
+  [ed editor-text callback options]
+  (object/raise linters ::start-lint! ed editor-text callback options))
+
 (defn- set-cm-lint-settings!
   [ed]
-  (let [{:keys [lint? fn auto? change-timeout] :or {auto? true change-timeout 500}} (-> @ed :info ::settings)]
+  (let [{:keys [lint? auto? change-timeout] :or {auto? true change-timeout 500}} (-> @ed :info ::settings)]
     (editor/set-options ed
                         {:lint (when lint? #js {:async true
-                                                :getAnnotations fn
+                                                :getAnnotations (partial editor-linting ed)
                                                 :lintOnChange auto?
                                                 :delay change-timeout})
                          :fixedGutter false})))
@@ -106,9 +120,8 @@
   [ed [linter-obj & args]]
   (editor/add-gutter ed "CodeMirror-lint-markers" 10)
   (let [ed-tag (first (get-in @ed [:info :tags]))
-        new-linters (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj ed args))
-        validator-fn (apply validate-with-all-linters ed (get-in new-linters [:by-tag ed-tag]))]
-    (object/merge! ed (update-in @ed [:info ::settings] merge {:lint? true :fn validator-fn}))
+        new-linters (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj ed args))]
+    (object/merge! ed (update-in @ed [:info ::settings] merge {:lint? true}))
     (set-cm-lint-settings! ed)
     (:ed @ed)))
 
