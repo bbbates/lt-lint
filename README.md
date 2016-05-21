@@ -1,4 +1,4 @@
-# Linters for LightTable - lt-lint
+# Linters for LightTable: ```Linting```
 
 Base plugin for enabling editor linter addons for LightTable.
 
@@ -22,13 +22,13 @@ Linters are automatically run 500ms after a change, which may be a bit much, esp
 [:editor.lang :lt.plugins.lt-lint/auto-linting-properties true 3000] ;; automatically lint, but wait for 3s first
 ```
 
-If you turn automatic linting off, you can run all linters for the current editor with the ```Linter: run linters for current editor``` command.
+If you turn automatic linting off, you can run all linters for the current editor with the ```Linting: run linters for current editor``` command.
 
 ### Lint messages
 
 ![Lint mark](https://raw.githubusercontent.com/bbbates/lt-lint/master/doc/lint-mark.png)
 
-Messages from the linter can be shown by placing the cursor on the underlined text, and using the ```Linter: toggle lint message``` command.
+Messages from the linter can be shown by placing the cursor on the underlined text, and using the ```Linting: toggle lint message``` command.
 
 ![Lint message](https://raw.githubusercontent.com/bbbates/lt-lint/master/doc/lint-message.png)
 

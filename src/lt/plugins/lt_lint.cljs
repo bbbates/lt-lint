@@ -132,7 +132,7 @@
 (behavior ::register-linter
           :triggers #{:object.instant}
           :type :user
-          :desc "Editor: Register linter"
+          :desc "Linting: Register linter"
           :params [{:label "linter" :example "[:lt.plugins.some-linter/linter-object :opt-arg1 val1 :opt-arg2 val2 ...]"}]
           :reaction prepare-editor-for-linter)
 
@@ -140,14 +140,14 @@
 (behavior ::auto-linting-properties
           :triggers #{:object.instant}
           :type :user
-          :desc "Editor: Auto linting settings"
+          :desc "Linting: Auto linting settings"
           :params [{:label "enabled?" :type :boolean} {:label "change timeout" :type :number}]
           :reaction (fn [ed enabled? change-timeout]
                       (object/merge! ed (update-in @ed [:info ::settings] merge {:auto? enabled? :change-timeout change-timeout}))
                       (set-cm-lint-settings! ed)))
 
 (cmd/command {:command ::run-linters!
-              :desc "Linter: run linters for current editor"
+              :desc "Linting: run linters for current editor"
               :exec (fn []
                       (when-let [ed (pool/last-active)]
                         (.performLint (editor/->cm-ed ed))))})
@@ -182,7 +182,7 @@
     (notifos/set-msg! "No lint message found at cursor..." {:class "error"})))
 
 (cmd/command {:command ::toggle-lint-message
-              :desc "Linter: toggle lint message"
+              :desc "Linting: toggle lint message"
               :exec (fn []
                       (when-let [ed (pool/last-active)]
                         (toggle-lint-message ed)))})
