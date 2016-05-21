@@ -39,6 +39,7 @@
 (defn- ->cm-lint-msg
   [{:keys [from to] :as msg}]
   (assoc msg
+    :range [from to]
     :from (js/CodeMirror.Pos (first from) (last from))
     :to (js/CodeMirror.Pos (first to) (last to))))
 
@@ -157,20 +158,25 @@
 
 (defn- inline-doc-for-lint-messages
   [msgs]
-  (let [msgs (map text-mark->lint-result msgs)]
-    {:loc {:line (.-line (:to (first msgs)))}
-     :name "Lint results"
-     :doc (clojure.string/join "\n\n" (map doc-message-text msgs))}))
+  {:loc {:line (.-line (:to (first msgs)))}
+   :name "Lint results"
+   :doc (clojure.string/join "\n\n" (map doc-message-text msgs))})
 
 (defn show-lint-message
   [ed lint-messages]
   (object/raise ed :editor.doc.show! (inline-doc-for-lint-messages lint-messages)))
 
+(defn doc-shown-for-lint-message?
+  [ed lint-messages]
+  (let [lines-in-lint-messages (set (mapcat (juxt (comp ffirst :range) (comp first last :range)) lint-messages))]
+    (some (partial doc/doc-on-line? ed)
+          (range (apply min lines-in-lint-messages) (inc (apply max lines-in-lint-messages))))))
+
 (defn toggle-lint-message
   [ed]
-  (if-let [lint-messages (lint-messages-for-cursor ed)]
+  (if-let [lint-messages (map text-mark->lint-result (lint-messages-for-cursor ed))]
     (let [loc (editor/->cursor ed)]
-      (if-let [cur (doc/doc-on-line? ed (:line loc))]
+      (if-let [cur (doc-shown-for-lint-message? ed lint-messages)]
         (doc/remove! ed cur)
         (show-lint-message ed lint-messages)))
     (notifos/set-msg! "No lint message found at cursor..." {:class "error"})))
