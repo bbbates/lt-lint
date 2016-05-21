@@ -16,7 +16,6 @@
                 :by-tag {}
                 :behaviors [::lint-handler])
 
-(def ^:private linters (object/create ::linters))
 (def ^:private default-timeout 5000)
 
 ;; Linter plugin authors: your linter should provide a ::linter object that defines a behavior
@@ -79,6 +78,7 @@
   "Raise ::validate trigger on all given linter objects asynchronously, then pass all the results
   at once to the codemirror linter callback function"
   [ed & linter-objs]
+  (:info @ed)
   (fn [editor-text callback options]
     (editor/off ed :cursorActivity (partial on-cursor-activity ed))
     (editor/on ed :cursorActivity (partial on-cursor-activity ed))
@@ -106,12 +106,15 @@
 
 (defn- start-lint!
   [linters ed editor-text callback options]
+  (keys @linters)
   (let [ed-tag (first (get-in @ed [:info :tags]))]
     ((apply validate-with-all-linters ed (get-in @linters [:by-tag ed-tag])) editor-text callback options)))
 
 (behavior ::lint-handler
           :triggers #{::start-lint!}
           :reaction start-lint!)
+
+(def ^:private linters (object/create ::linters))
 
 (defn- editor-linting
   [ed editor-text callback options]
@@ -130,8 +133,8 @@
 (defn- prepare-editor-for-linter
   [ed [linter-obj & args]]
   (editor/add-gutter ed "CodeMirror-lint-markers" 10)
-  (let [ed-tag (first (get-in @ed [:info :tags]))
-        new-linters (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj ed args))]
+  (let [ed-tag (first (get-in @ed [:info :tags]))]
+    (object/merge! linters (update-in @linters [:by-tag ed-tag] add-linter linter-obj ed args))
     (object/merge! ed (update-in @ed [:info ::settings] merge {:lint? true}))
     (set-cm-lint-settings! ed)
     (:ed @ed)))
