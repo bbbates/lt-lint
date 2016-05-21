@@ -52,6 +52,16 @@
   (let [text-marks (editor/find-marks ed (editor/->cursor ed))]
     (seq (filter is-lint-mark? text-marks))))
 
+(defn lint-messages-for-ed
+  [ed]
+  (let [text-marks (.getAllMarks (editor/->cm-ed ed))]
+    (seq (filter is-lint-mark? text-marks))))
+
+(defn lint-messages-for-cursor
+  [ed]
+  (let [text-marks (editor/find-marks ed (editor/->cursor ed))]
+    (seq (filter is-lint-mark? text-marks))))
+
 (defn text-mark->lint-result
   [text-mark]
   (js->clj (.-__annotation text-mark) :keywordize-keys true))
@@ -80,7 +90,7 @@
                                   [ch callback-fn obj]))
                               linter-objs)]
       (doseq [[_ f obj] validate-chans] (object/raise obj ::validate editor-text f ed))
-      (go-loop [[[ch _ obj] & r] validate-chans results []]
+      (go-loop [[[ch _ obj] & r :as c] validate-chans results []]
                (let [res (verify-linter-result obj (async/<! ch))
                      results+res (if res (conj results res) results)]
                  (if (seq r)
@@ -181,11 +191,30 @@
         (show-lint-message ed lint-messages)))
     (notifos/set-msg! "No lint message found at cursor..." {:class "error"})))
 
+(defn toggle-all-lint-messages
+  [ed]
+  (when-let [lint-messages (map text-mark->lint-result (lint-messages-for-ed ed))]
+    (let [all-shown? (or (get-in @ed [:info ::settings :all-shown?]) false)]
+      (doseq [msg lint-messages]
+        (dissoc msg :from-linter)
+        (if all-shown?
+          (when-let [cur (doc-shown-for-lint-message? ed [msg])]
+            (doc/remove! ed cur))
+          (when-not (doc-shown-for-lint-message? ed [msg])
+            (show-lint-message ed [msg]))))
+      (object/merge! ed (update-in @ed [:info ::settings] merge {:all-shown? (not all-shown?)})))))
+
 (cmd/command {:command ::toggle-lint-message
               :desc "Linting: toggle lint message"
               :exec (fn []
                       (when-let [ed (pool/last-active)]
                         (toggle-lint-message ed)))})
+
+(cmd/command {:command ::toggle-all-lint-messages
+              :desc "Linting: toggle all lint messages in editor"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (toggle-all-lint-messages ed)))})
 
 
 ;; Notes ---------
