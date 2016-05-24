@@ -187,16 +187,22 @@
 
 (defn toggle-lint-message
   [ed]
-  (if-let [lint-messages (map text-mark->lint-result (lint-messages-for-cursor ed))]
+  (if-let [lint-messages (seq (map text-mark->lint-result (lint-messages-for-cursor ed)))]
     (let [loc (editor/->cursor ed)]
       (if-let [cur (doc-shown-for-lint-message? ed lint-messages)]
         (doc/remove! ed cur)
         (show-lint-message ed lint-messages)))
     (notifos/set-msg! "No lint message found at cursor..." {:class "error"})))
 
+(cmd/command {:command ::toggle-lint-message
+              :desc "Linting: toggle lint message"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (toggle-lint-message ed)))})
+
 (defn toggle-all-lint-messages
   [ed]
-  (when-let [lint-messages (map text-mark->lint-result (lint-messages-for-ed ed))]
+  (when-let [lint-messages (seq (map text-mark->lint-result (lint-messages-for-ed ed)))]
     (let [all-shown? (or (get-in @ed [:info ::settings :all-shown?]) false)]
       (doseq [msg lint-messages]
         (dissoc msg :from-linter)
@@ -206,12 +212,6 @@
           (when-not (doc-shown-for-lint-message? ed [msg])
             (show-lint-message ed [msg]))))
       (object/merge! ed (update-in @ed [:info ::settings] merge {:all-shown? (not all-shown?)})))))
-
-(cmd/command {:command ::toggle-lint-message
-              :desc "Linting: toggle lint message"
-              :exec (fn []
-                      (when-let [ed (pool/last-active)]
-                        (toggle-lint-message ed)))})
 
 (cmd/command {:command ::toggle-all-lint-messages
               :desc "Linting: toggle all lint messages in editor"
