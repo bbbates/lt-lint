@@ -94,6 +94,8 @@ The example\_linter.cljs file in this project contains a simple little example o
 
 - [lt-clojure-linter](https://github.com/bbbates/lt-clojure-linter)
 - [lt-jshint](https://github.com/bbbates/lt-jshint)
+- [lt-css-lint](https://github.com/bbbates/lt-css-lint)
+- [lt-eslint]((https://github.com/bbbates/lt-eslint)
 
 ## License
 
